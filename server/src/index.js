@@ -14,27 +14,25 @@ const { generate } = require('./utils/qrGenerator');
 
 const app = express();
 
-// ----- FIXED CORS -----
-const corsOptions = {
-  origin: [
-    'https://paypin.onrender.com', // your frontend Render URL
-    'http://localhost:3000'
-  ],
+// ===== CORS FIX =====
+// Allow requests from ANYWHERE (for testing and production)
+app.use(cors({
+  origin: "*",
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true
-};
-app.use(cors(corsOptions));
-// ----------------------
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+app.options('*', cors());
+// ====================
 
 const server = http.createServer(app);
 const io = socketIo(server, { cors: { origin: '*' } });
 
-// MongoDB connection
+// ----- MongoDB connection -----
 mongoose.connect(process.env.MONGODB_URI)
   .then(() => console.log('MongoDB connected'))
-  .catch(err => console.error(err));
+  .catch(err => console.error('MongoDB Error:', err));
 
+// ----- Middleware -----
 app.use(express.json());
 
 // ---------- Public Route for Initiating Payment ----------
@@ -43,7 +41,6 @@ app.post('/api/initiate-payment', async (req, res) => {
     const { email, amount, description } = req.body;
 
     const payment = await Payment.create({ email, amount, description });
-
     const payload = { paymentId: payment._id };
     const qr = await generate(payload);
 
@@ -58,12 +55,11 @@ app.post('/api/initiate-payment', async (req, res) => {
 });
 // ---------------------------------------------------------
 
-// Auth routes
+// ----- Routes -----
 app.use('/api/auth', authRouter);
-
-// Protected payment routes
 app.use('/api', authMiddleware, paymentRouter);
 
+// ----- WebSockets -----
 io.on('connection', (socket) => {
   console.log('Admin dashboard connected:', socket.id);
 });
