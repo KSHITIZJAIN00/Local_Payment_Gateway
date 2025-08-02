@@ -10,7 +10,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Navigate to="/portal" />} />
         <Route path="/admin" element={<AdminDashboard />} />
-        <Route path="/checkout/:paymentId" element={<Checkout />} />
+        <Route path="/checkout" element={<Checkout />} />
         <Route path="/portal" element={<UserPortal />} />
       </Routes>
     </Router>
