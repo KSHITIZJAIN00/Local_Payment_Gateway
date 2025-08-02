@@ -4,8 +4,8 @@ const { generate } = require('../utils/qrGenerator');
 
 const router = express.Router();
 
-// Use a fixed URL to avoid environment issues on Render
-const CHECKOUT_URL = "https://paypin.onrender.com/checkout";
+// Base checkout URL
+const CHECKOUT_BASE_URL = "https://paypin.onrender.com/checkout";
 
 /**
  * POST /api/initiate-payment
@@ -22,25 +22,27 @@ router.post('/initiate-payment', async (req, res) => {
       return res.status(400).json({ message: "Email and amount required" });
     }
 
-    // 1. Create a new payment document in MongoDB
-    console.log("Step 2: Creating payment in MongoDB...");
+    // Step 1: Save payment to DB
+    console.log("Step 1: Creating payment in MongoDB...");
     const payment = await Payment.create({ email, amount, description });
-    console.log("Step 2 OK: Payment saved:", payment);
+    console.log("Payment saved with ID:", payment._id);
 
-    // 2. Generate a QR code for this checkout URL
-    console.log("Step 3: Generating QR...");
-    const qr = await generate(CHECKOUT_URL);
-    console.log("Step 3 OK: QR generated");
+    // Step 2: Build a full URL that includes the payment ID
+    const fullCheckoutUrl = `${CHECKOUT_BASE_URL}/${payment._id.toString()}`;
 
-    // 3. Prepare response
+    // Step 3: Generate QR code for this specific checkout URL
+    console.log("Generating QR for:", fullCheckoutUrl);
+    const qr = await generate(fullCheckoutUrl);
+
+    // Step 4: Send the response back
     const responsePayload = {
       qr,
-      url: CHECKOUT_URL,
+      url: fullCheckoutUrl,
       paymentId: payment._id.toString(),
     };
 
-    console.log("Step 4: Returning success response", responsePayload);
-    return res.json(responsePayload);
+    console.log("Final response payload about to send:", responsePayload);
+    return res.status(200).json(responsePayload);
 
   } catch (error) {
     console.error("Error in initiate-payment:", error);
@@ -65,15 +67,16 @@ router.get('/payment/:id', async (req, res) => {
 
     console.log("Payment found:", payment);
 
-    const qr = await generate(CHECKOUT_URL);
+    const fullCheckoutUrl = `${CHECKOUT_BASE_URL}/${payment._id.toString()}`;
+    const qr = await generate(fullCheckoutUrl);
 
     const responsePayload = {
       ...payment.toObject(),
       qr,
-      url: CHECKOUT_URL,
+      url: fullCheckoutUrl,
     };
-    console.log("Sending response:", responsePayload);
 
+    console.log("Sending response:", responsePayload);
     return res.json(responsePayload);
 
   } catch (err) {
