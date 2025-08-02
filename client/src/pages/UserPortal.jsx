@@ -7,17 +7,30 @@ export default function UserPortal() {
   const [email, setEmail] = useState('');
   const [pin, setPin] = useState('');
   const [token, setToken] = useState('');
+  const [message, setMessage] = useState('');
 
   const register = async () => {
-    const res = await axios.post(`${API_BASE}/api/auth/register`, { email, pin });
-    setToken(res.data.token);
-    localStorage.setItem('token', res.data.token);
+    try {
+      const res = await axios.post(`${API_BASE}/api/auth/register`, { email, pin });
+      setToken(res.data.token);
+      localStorage.setItem('token', res.data.token);
+      setMessage('User registered successfully!');
+    } catch (err) {
+      console.error(err);
+      setMessage('Registration failed. Please try again.');
+    }
   };
 
   const login = async () => {
-    const res = await axios.post(`${API_BASE}/api/auth/login`, { email, pin });
-    setToken(res.data.token);
-    localStorage.setItem('token', res.data.token);
+    try {
+      const res = await axios.post(`${API_BASE}/api/auth/login`, { email, pin });
+      setToken(res.data.token);
+      localStorage.setItem('token', res.data.token);
+      setMessage('Login successful!');
+    } catch (err) {
+      console.error(err);
+      setMessage('Login failed. Please check your credentials.');
+    }
   };
 
   return (
@@ -51,6 +64,11 @@ export default function UserPortal() {
           Login
         </button>
       </div>
+      {message && (
+        <div className="mt-4 p-2 bg-gray-100 border rounded text-center">
+          {message}
+        </div>
+      )}
     </div>
   );
 }
