@@ -17,6 +17,7 @@ export default function Checkout() {
 
     if (!id) {
       alert("No payment found");
+      window.location.href = "/"; // redirect to home
       return;
     }
 
@@ -31,6 +32,7 @@ export default function Checkout() {
       .catch((err) => {
         console.error("Failed to fetch payment:", err);
         alert("Payment not found!");
+        window.location.href = "/";
       });
   }, []);
 
