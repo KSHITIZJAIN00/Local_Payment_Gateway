@@ -4,6 +4,9 @@ const { generate } = require('../utils/qrGenerator');
 
 const router = express.Router();
 
+// Use a fixed URL to avoid environment issues on Render
+const CHECKOUT_URL = "https://paypin.onrender.com/checkout";
+
 /**
  * POST /api/initiate-payment
  * Creates a new payment and returns checkout URL, QR code, and paymentId.
@@ -20,25 +23,23 @@ router.post('/initiate-payment', async (req, res) => {
     }
 
     // 1. Create a new payment document in MongoDB
+    console.log("Step 2: Creating payment in MongoDB...");
     const payment = await Payment.create({ email, amount, description });
-    console.log("Payment created with ID:", payment._id);
+    console.log("Step 2 OK: Payment saved:", payment);
 
-    // 2. Use a clean /checkout URL (no ID in the URL)
-    const checkoutUrl = `${process.env.BASE_URL}/checkout`;
-    console.log("Checkout URL generated:", checkoutUrl);
+    // 2. Generate a QR code for this checkout URL
+    console.log("Step 3: Generating QR...");
+    const qr = await generate(CHECKOUT_URL);
+    console.log("Step 3 OK: QR generated");
 
-    // 3. Generate a QR code for this checkout URL
-    const qr = await generate(checkoutUrl);
-    console.log("QR code generated successfully");
-
-    // 4. Return all required fields to frontend
+    // 3. Prepare response
     const responsePayload = {
       qr,
-      url: checkoutUrl,
+      url: CHECKOUT_URL,
       paymentId: payment._id.toString(),
     };
-    console.log("Sending response:", responsePayload);
 
+    console.log("Step 4: Returning success response", responsePayload);
     return res.json(responsePayload);
 
   } catch (error) {
@@ -64,13 +65,12 @@ router.get('/payment/:id', async (req, res) => {
 
     console.log("Payment found:", payment);
 
-    const checkoutUrl = `${process.env.BASE_URL}/checkout`;
-    const qr = await generate(checkoutUrl);
+    const qr = await generate(CHECKOUT_URL);
 
     const responsePayload = {
       ...payment.toObject(),
       qr,
-      url: checkoutUrl,
+      url: CHECKOUT_URL,
     };
     console.log("Sending response:", responsePayload);
 
