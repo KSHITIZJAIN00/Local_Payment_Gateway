@@ -37,7 +37,7 @@ router.post('/initiate-payment', async (req, res) => {
 
 /**
  * GET /api/payment/:id
- * Returns payment details for the checkout page (using the paymentId stored in localStorage).
+ * Returns payment details for the checkout page.
  */
 router.get('/payment/:id', async (req, res) => {
   try {
@@ -49,7 +49,6 @@ router.get('/payment/:id', async (req, res) => {
       return res.status(404).json({ message: 'Payment not found' });
     }
 
-    // Same checkout URL without exposing ID
     const checkoutUrl = `${process.env.BASE_URL}/checkout`;
     const qr = await generate(checkoutUrl);
 
@@ -67,7 +66,7 @@ router.get('/payment/:id', async (req, res) => {
 
 /**
  * POST /api/complete-payment
- * Completes a payment after verifying the user's PIN.
+ * Completes a payment after verifying PIN.
  */
 router.post('/complete-payment', async (req, res) => {
   try {
@@ -85,11 +84,24 @@ router.post('/complete-payment', async (req, res) => {
     payment.status = 'completed';
     await payment.save();
 
-    // Notify all connected clients (via Socket.IO)
     req.app.get('io').emit('payment', payment);
 
     return res.json({ success: true, payment });
 
   } catch (err) {
     console.error('Error in complete-payment:', err);
-    retu
+    return res.status(500).json({ message: 'Failed to complete payment' });
+  }
+});
+
+/**
+ * GET /api/payments
+ * Lists all payments (for admin).
+ */
+router.get('/payments', async (_req, res) => {
+  const list = await Payment.find().sort('-createdAt');
+  return res.json(list);
+});
+
+// VERY IMPORTANT: export the router at the end
+module.exports = router;
