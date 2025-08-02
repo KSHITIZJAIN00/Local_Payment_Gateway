@@ -1,0 +1,21 @@
+{
+  "name": "local_payment_gateway-server",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js"
+  },
+  "dependencies": {
+    "bcrypt": "^5.x",
+    "cors": "^2.8.5",
+    "dotenv": "^16.x",
+    "express": "^4.x",
+    "jsonwebtoken": "^9.x",
+    "mongoose": "^6.x",
+    "qrcode": "^1.x",
+    "socket.io": "^4.x"
+  },
+  "devDependencies": {
+    "nodemon": "^2.x"
+  }
+}

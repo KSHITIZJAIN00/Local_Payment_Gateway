@@ -1,0 +1,33 @@
+{
+  "name": "local_payment_gateway-client",
+  "version": "1.0.0",
+  "proxy": "http://localhost:5000",
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build"
+  },
+  "dependencies": {
+    "axios": "^1.x",
+    "qrcode.react": "^3.x",
+    "react": "^18.x",
+    "react-dom": "^18.x",
+    "react-router-dom": "^7.7.1",
+    "react-scripts": "5.x",
+    "socket.io-client": "^4.x",
+    "tailwindcss": "^3.x"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all",
+      "last 2 edge versions"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version",
+      "last 1 edge version"
+    ]
+  }
+}
