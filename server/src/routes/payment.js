@@ -24,10 +24,10 @@ router.post('/initiate-payment', async (req, res) => {
 
     // 4. Return response with paymentId included
     res.json({
-      qr,
-      url: checkoutUrl,
-      paymentId: payment._id
-    });
+  qr,
+  url: checkoutUrl,
+  paymentId: payment._id.toString()
+});
 
   } catch (error) {
     console.error("Error in initiate-payment:", error);
