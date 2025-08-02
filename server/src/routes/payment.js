@@ -10,24 +10,36 @@ const router = express.Router();
  */
 router.post('/initiate-payment', async (req, res) => {
   try {
+    console.log("=== /api/initiate-payment called ===");
+    console.log("Request body:", req.body);
+
     const { email, amount, description } = req.body;
-    console.log("Initiating payment for:", { email, amount, description });
+    if (!email || !amount) {
+      console.error("Missing email or amount");
+      return res.status(400).json({ message: "Email and amount required" });
+    }
 
     // 1. Create a new payment document in MongoDB
     const payment = await Payment.create({ email, amount, description });
+    console.log("Payment created with ID:", payment._id);
 
     // 2. Use a clean /checkout URL (no ID in the URL)
     const checkoutUrl = `${process.env.BASE_URL}/checkout`;
+    console.log("Checkout URL generated:", checkoutUrl);
 
     // 3. Generate a QR code for this checkout URL
     const qr = await generate(checkoutUrl);
+    console.log("QR code generated successfully");
 
     // 4. Return all required fields to frontend
-    return res.json({
+    const responsePayload = {
       qr,
       url: checkoutUrl,
-      paymentId: payment._id.toString()
-    });
+      paymentId: payment._id.toString(),
+    };
+    console.log("Sending response:", responsePayload);
+
+    return res.json(responsePayload);
 
   } catch (error) {
     console.error("Error in initiate-payment:", error);
@@ -41,7 +53,8 @@ router.post('/initiate-payment', async (req, res) => {
  */
 router.get('/payment/:id', async (req, res) => {
   try {
-    console.log("Fetching payment details for:", req.params.id);
+    console.log("=== /api/payment/:id called ===");
+    console.log("Fetching payment details for ID:", req.params.id);
 
     const payment = await Payment.findById(req.params.id);
     if (!payment) {
@@ -49,14 +62,19 @@ router.get('/payment/:id', async (req, res) => {
       return res.status(404).json({ message: 'Payment not found' });
     }
 
+    console.log("Payment found:", payment);
+
     const checkoutUrl = `${process.env.BASE_URL}/checkout`;
     const qr = await generate(checkoutUrl);
 
-    return res.json({
+    const responsePayload = {
       ...payment.toObject(),
       qr,
-      url: checkoutUrl
-    });
+      url: checkoutUrl,
+    };
+    console.log("Sending response:", responsePayload);
+
+    return res.json(responsePayload);
 
   } catch (err) {
     console.error('Failed to fetch payment:', err);
@@ -70,19 +88,27 @@ router.get('/payment/:id', async (req, res) => {
  */
 router.post('/complete-payment', async (req, res) => {
   try {
+    console.log("=== /api/complete-payment called ===");
+    console.log("Request body:", req.body);
+
     const { paymentId, pin } = req.body;
-    console.log("Completing payment for:", paymentId);
+    console.log("Completing payment for ID:", paymentId);
 
     const payment = await Payment.findById(paymentId);
-    if (!payment) return res.status(404).json({ message: 'Not found' });
+    if (!payment) {
+      console.warn("Payment not found:", paymentId);
+      return res.status(404).json({ message: 'Not found' });
+    }
 
-    // Verify user PIN
+    console.log("Verifying user PIN...");
     if (!(await req.user.verifyPin(pin))) {
+      console.warn("Wrong PIN for payment:", paymentId);
       return res.status(401).json({ message: 'Wrong PIN' });
     }
 
     payment.status = 'completed';
     await payment.save();
+    console.log("Payment marked as completed:", payment._id);
 
     req.app.get('io').emit('payment', payment);
 
@@ -99,9 +125,10 @@ router.post('/complete-payment', async (req, res) => {
  * Lists all payments (for admin).
  */
 router.get('/payments', async (_req, res) => {
+  console.log("=== /api/payments called ===");
   const list = await Payment.find().sort('-createdAt');
+  console.log("Total payments found:", list.length);
   return res.json(list);
 });
 
-// VERY IMPORTANT: export the router at the end
 module.exports = router;
