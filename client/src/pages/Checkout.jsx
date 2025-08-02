@@ -1,4 +1,4 @@
-  import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useParams } from 'react-router-dom';
 import QRCodeDisplay from '../components/QRCodeDisplay';
@@ -9,25 +9,28 @@ export default function Checkout() {
   const { paymentId } = useParams();
   const [pin, setPin] = useState('');
   const [qr, setQr] = useState('');
-  const [payment, setPayment] = useState(null);
+  const [amount, setAmount] = useState('');
+  const [email, setEmail] = useState('');
 
-  // Fetch payment details when page loads
+  // Fetch payment details from backend
   useEffect(() => {
     axios
       .get(`${API_BASE}/api/payment/${paymentId}`)
       .then((res) => {
-        setPayment(res.data);
         setQr(res.data.qr);
+        setAmount(res.data.amount);
+        setEmail(res.data.email);
       })
       .catch((err) => {
-        console.error('Failed to fetch payment:', err.response?.data || err.message);
+        console.error("Failed to fetch payment:", err);
+        alert("Payment not found!");
       });
   }, [paymentId]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const token = localStorage.getItem('token');
     try {
+      const token = localStorage.getItem('token');
       await axios.post(
         `${API_BASE}/api/complete-payment`,
         { paymentId, pin },
@@ -37,35 +40,32 @@ export default function Checkout() {
       );
       alert('Payment Completed');
     } catch (err) {
-      alert('Failed to complete payment');
-      console.error(err);
+      console.error("Error completing payment:", err);
+      alert("Failed to complete payment");
     }
   };
 
-  if (!payment) {
-    return <div className="p-4">Loading...</div>;
-  }
-
   return (
     <div className="p-4">
-      <h1 className="text-xl font-bold mb-4">Checkout</h1>
-      <p><strong>Email:</strong> {payment.email}</p>
-      <p><strong>Amount:</strong> ₹{payment.amount}</p>
-      <p><strong>Description:</strong> {payment.description}</p>
+      <h1 className="text-xl font-bold mb-2">Checkout</h1>
+      <p>Email: {email}</p>
+      <p>Amount: ₹{amount}</p>
 
-      <QRCodeDisplay dataUrl={qr} />
+      <div className="my-4">
+        <QRCodeDisplay dataUrl={qr} />
+      </div>
 
-      <form onSubmit={handleSubmit} className="mt-4">
+      <form onSubmit={handleSubmit}>
         <input
           type="password"
           value={pin}
           onChange={(e) => setPin(e.target.value)}
           placeholder="Enter PIN"
-          className="border p-2 block mb-2"
+          className="border p-2 mr-2"
         />
         <button
           type="submit"
-          className="bg-blue-500 text-white px-4 py-2"
+          className="bg-blue-500 text-white px-4 py-2 mt-2"
         >
           Pay
         </button>
