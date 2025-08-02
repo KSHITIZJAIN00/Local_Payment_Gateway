@@ -43,7 +43,7 @@ router.get('/payment/:id', async (req, res) => {
       return res.status(404).json({ message: 'Payment not found' });
     }
 
-    const checkoutUrl = `${process.env.BASE_URL}/checkout?paymentId=${payment._id}`;
+    const checkoutUrl = `${process.env.BASE_URL}/checkout`;
     const qr = await generate(checkoutUrl);
 
     res.json({
