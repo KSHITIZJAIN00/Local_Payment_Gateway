@@ -1,19 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { useParams } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import QRCodeDisplay from '../components/QRCodeDisplay';
 
 const API_BASE = process.env.REACT_APP_API_URL || "https://local-payment-gateway-server.onrender.com";
 
+function useQuery() {
+  return new URLSearchParams(useLocation().search);
+}
+
 export default function Checkout() {
-  const { paymentId } = useParams();
+  const query = useQuery();
+  const paymentId = query.get('paymentId');
+
   const [pin, setPin] = useState('');
   const [qr, setQr] = useState('');
   const [amount, setAmount] = useState('');
   const [email, setEmail] = useState('');
 
-  // Fetch payment details from backend
   useEffect(() => {
+    if (!paymentId) return;
     axios
       .get(`${API_BASE}/api/payment/${paymentId}`)
       .then((res) => {
