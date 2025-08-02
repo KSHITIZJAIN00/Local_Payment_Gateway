@@ -13,12 +13,36 @@ const { generate } = require('./utils/qrGenerator');
 
 const app = express();
 
-// ===== UNIVERSAL CORS FIX =====
-app.use(cors({
-  origin: '*', // allow all origins
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
+// ===== DYNAMIC CORS FIX =====
+const allowedOrigins = [
+  /\.onrender\.com$/,  // allow any frontend on Render
+  /\.vercel\.app$/,    // allow any frontend on Vercel
+  "http://localhost:3000"
+];
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true); // allow Postman or server-to-server requests
+
+      const isAllowed = allowedOrigins.some((pattern) => {
+        if (typeof pattern === "string") return pattern === origin;
+        return pattern.test(origin);
+      });
+
+      if (isAllowed) {
+        callback(null, true);
+      } else {
+        console.error(`Blocked CORS request from origin: ${origin}`);
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: false // No cookies needed
+  })
+);
+
 app.options('*', cors());
 // ==============================
 
