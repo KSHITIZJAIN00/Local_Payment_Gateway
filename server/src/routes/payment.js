@@ -11,7 +11,7 @@ router.post('/initiate-payment', async (req, res) => {
     const payment = await Payment.create({ email, amount, description });
 
     // 2. Build checkout URL
-    const baseUrl = process.env.BASE_URL || "http://localhost:3000";
+    const baseUrl = process.env.BASE_URL;
     const checkoutUrl = `${baseUrl}/checkout/${payment._id}`;
 
     // 3. Generate QR code for the URL (so scanning opens the page)
