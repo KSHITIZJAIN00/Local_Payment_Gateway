@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Checkout</title>
+</head>
+<body>
+  <h1>Checkout</h1>
+  <div id="qr"></div>
+  <form id="payForm">
+    <input type="password" id="pin" placeholder="Enter PIN" required>
+    <button type="submit">Pay</button>
+  </form>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const paymentId = params.get("paymentId");
+    const API_BASE = "https://local-payment-gateway-server.onrender.com";
+
+    async function fetchPayment() {
+      const res = await fetch(`${API_BASE}/api/payment/${paymentId}`);
+      const data = await res.json();
+      const img = document.createElement("img");
+      img.src = data.qr;
+      document.getElementById("qr").appendChild(img);
+    }
+
+    document.getElementById("payForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const pin = document.getElementById("pin").value;
+      const token = localStorage.getItem("token");
+      await fetch(`${API_BASE}/api/complete-payment`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ paymentId, pin })
+      });
+      alert("Payment Completed");
+    });
+
+    fetchPayment();
+  </script>
+</body>
+</html>
