@@ -35,6 +35,7 @@ router.post('/initiate-payment', async (req, res) => {
  * GET /api/payment/:id
  * Fetch payment details for checkout page.
  */
+// GET /api/payment/:id
 router.get('/payment/:id', async (req, res) => {
   try {
     const payment = await Payment.findById(req.params.id);
@@ -42,7 +43,7 @@ router.get('/payment/:id', async (req, res) => {
       return res.status(404).json({ message: 'Payment not found' });
     }
 
-    const checkoutUrl = `${process.env.BASE_URL}/checkout/${payment._id}`;
+    const checkoutUrl = `${process.env.BASE_URL}/checkout?paymentId=${payment._id}`;
     const qr = await generate(checkoutUrl);
 
     res.json({
@@ -55,6 +56,7 @@ router.get('/payment/:id', async (req, res) => {
     res.status(500).json({ message: 'Failed to fetch payment' });
   }
 });
+
 
 /**
  * POST /api/complete-payment
