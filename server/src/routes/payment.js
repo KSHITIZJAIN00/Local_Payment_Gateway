@@ -13,7 +13,7 @@ router.post('/initiate-payment', async (req, res) => {
     const { email, amount, description } = req.body;
 
     const payment = await Payment.create({ email, amount, description });
-    const checkoutUrl = `${process.env.BASE_URL}/checkout/${payment._id}`;
+    const checkoutUrl = `${process.env.BASE_URL}/checkout.html?paymentId=${payment._id}`;
     const qr = await generate(checkoutUrl);
 
     res.json({ qr, url: checkoutUrl });
